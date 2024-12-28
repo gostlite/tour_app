@@ -1,0 +1,6 @@
+/.config.env
+/.dist
+/.eslintrc.json
+/.prettierrc
+/dev-data
+/node_modules
