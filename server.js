@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config({ path: './.config.env' });
+const mongoose = require('mongoose');
 
 process.on('uncaughtException', (err) => {
   console.log(err.name, err.message);
@@ -38,11 +38,10 @@ mongoose
 //   .catch((err) => {
 //     console.log(err);
 //   });
-const port = 3000;
 
 /////4 start server//////////
-const server = app.listen(port, () => {
-  console.log(port);
+const server = app.listen(process.env.PORT, () => {
+  console.log(process.env.PORT);
 });
 
 //catching global unhandeled node error

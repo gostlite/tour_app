@@ -11,6 +11,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 app.use(express.json());
 
+app.use((req, res, next) => {
+  req.reuestTime = new Date().toISOString();
+  console.log(req.headers);
+  next();
+});
+
+//2 ROUTES
 const tourRouter = require('./routes/tour_router');
 const userRouter = require('./routes/user_router');
 app.use('/api/v1/tours', tourRouter);

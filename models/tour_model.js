@@ -76,7 +76,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 
 //mongo db Document middleware, it runs before the save and create
 tourSchema.pre('save', function (next) {
-  console.log(this);
+  // console.log(this);
   this.slug = slugify(this.name, { lower: true });
   next();
 });
@@ -93,13 +93,13 @@ tourSchema.pre('save', function (next) {
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
-  console.log('this is the this ', this);
+  // console.log('this is the this ', this);
   next();
 });
 
 tourSchema.post(/^find/, function (doc, next) {
   console.log(`this is the time it took to find ${Date.now() - this.start}`);
-  console.log(doc);
+  // console.log(doc);
   next();
 });
 
