@@ -3,7 +3,8 @@ dotenv.config({ path: './.config.env' });
 const mongoose = require('mongoose');
 
 process.on('uncaughtException', (err) => {
-  console.log(err.name, err.message);
+  // console.log(err.name, err.message);
+  console.log(err);
   console.log('UNHANDLED EXCEPTION');
 
   process.exit(1);

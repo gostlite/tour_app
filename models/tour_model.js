@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const myValidator = require('validator');
+// const User = require('./user_model');
 const tourSchema = new mongoose.Schema(
   {
     name: {
@@ -25,7 +26,7 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A difficulty is required'],
       enum: {
-        values: ['easy', 'medium', 'hard'],
+        values: ['easy', 'medium', 'difficult'],
         message: 'Difficulties are either easy, medium and hard',
       },
     }, //required are validator Important for strings
@@ -64,6 +65,32 @@ const tourSchema = new mongoose.Schema(
     image: [String],
     createdAt: { type: Date, default: Date.now(), select: false },
     startDates: [Date],
+    startLocation: {
+      //GeoJson
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    // reviews: { type: mongoose.Schema.ObjectId, ref: 'Review' },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }], //reference between different dataset in mongoose
   },
   { toJSON: { virtuals: true } },
   { toObject: { virtuals: true } }
@@ -74,12 +101,23 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+//virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
 //mongo db Document middleware, it runs before the save and create
 tourSchema.pre('save', function (next) {
   // console.log(this);
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+// tourSchema.pre('save', async function (next) {
+//   const guidePromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidePromises);
+//   next();
+// });
 //we can use multiple middleware or hooks for the document
 // tourSchema.pre('save', function (next) {
 //   console.log('will save document');
@@ -96,6 +134,17 @@ tourSchema.pre(/^find/, function (next) {
   // console.log('this is the this ', this);
   next();
 });
+
+//POPULATING THE GUIDES FIELD
+
+// tourSchema.pre(/^find/, function (next) {
+//   this.populate({
+//     path: 'guides',
+
+//     select: '-__v - passwordChangedAt',
+//   });
+//   next();
+// });
 
 tourSchema.post(/^find/, function (doc, next) {
   console.log(`this is the time it took to find ${Date.now() - this.start}`);
