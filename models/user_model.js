@@ -60,19 +60,6 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
 });
 
-userSchema.pre('save', async function (next) {
-  //only run the function if the password was modified
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  this.confirmPassword = undefined;
-
-  next();
-});
-userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next();
-  this.passwordChangedAt = Date.now() - 1000; // this is to ensure that the passwordChangedAt is always created after the password has been changed
-  next(); // this is to ensure that the passwordChangedAt is always created after the password has been changed
-});
 userSchema.methods.correctPassword = async function (
   // this method will be availbale on all document of User
   candidatePassword,

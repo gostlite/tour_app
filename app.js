@@ -39,7 +39,7 @@ app.use(
     whitelist: [
       'duration',
       'ratingAverage',
-      'retingsQuantity',
+      'ratingsQuantity',
       'maxGroupSize',
       'difficulty',
       'price',

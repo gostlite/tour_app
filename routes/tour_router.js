@@ -30,6 +30,14 @@ router
     tourController.getMonthlyPlan
   );
 router
+  .route('/tour-within/:distance/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+
+router.route('/distances/:latlng/unit/:unit').get(
+  // tourController.getToursWithin
+  tourController.getDistances
+);
+router
   .route('/')
   .get(tourController.getallTours)
   .post(
