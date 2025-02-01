@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -8,9 +9,18 @@ const app = express();
 const morgan = require('morgan');
 const AppError = require('./appError');
 const globalErrorHandler = require('./controllers/error_controllers');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
 //1 middleware
 
+//SERVING STATIC FILE
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(cors());
 // SECURE HTTP HEADER
+
 app.use(helmet());
 // DEVELOPMENT LOGGING
 if (process.env.NODE_ENV === 'development') {
@@ -26,6 +36,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 // BODY PARSER READING DATA FROM BODY INTO REQ.BODY
 app.use(express.json({ limit: '10KB' }));
+app.use(cookieParser());
 
 // DATA SANITISE AGAINST NO SQL QUERY INJECTION
 app.use(mongoSanitize());
@@ -47,12 +58,11 @@ app.use(
   })
 );
 
-//SERVING STATIC FILE
-app.use(express.static(`${__dirname}/public`));
 //TEST MIDDLEWARE
 app.use((req, res, next) => {
   req.reuestTime = new Date().toISOString();
   console.log(req.headers);
+  console.log(req.cookies);
   next();
 });
 
@@ -60,9 +70,14 @@ app.use((req, res, next) => {
 const tourRouter = require('./routes/tour_router');
 const userRouter = require('./routes/user_router');
 const reviewRouter = require('./routes/review_router');
+const viewRouter = require('./routes/views_router');
+
+//for the apis
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+
+app.use('/', viewRouter);
 
 app.all('*', (req, res, next) => {
   // res.status(404).json({

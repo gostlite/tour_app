@@ -63,7 +63,7 @@ const tourSchema = new mongoose.Schema(
       type: String,
       required: [true, 'the tour must have a cover image'],
     },
-    image: [String],
+    images: [String],
     createdAt: { type: Date, default: Date.now(), select: false },
     startDates: [Date],
     startLocation: {
@@ -141,14 +141,14 @@ tourSchema.pre(/^find/, function (next) {
 
 //POPULATING THE GUIDES FIELD
 
-// tourSchema.pre(/^find/, function (next) {
-//   this.populate({
-//     path: 'guides',
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
 
-//     select: '-__v - passwordChangedAt',
-//   });
-//   next();
-// });
+    select: '-__v -passwordChangedAt',
+  });
+  next();
+});
 
 tourSchema.post(/^find/, function (doc, next) {
   console.log(`this is the time it took to find ${Date.now() - this.start}`);

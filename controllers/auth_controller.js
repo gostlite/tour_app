@@ -74,6 +74,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   // console.log('this is th token', token);
   if (!token) return next(new AppError("Sorry you aren't logged in", 401));
@@ -81,7 +83,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // promisify is used to convert the callback function to a promise
 
-  console.log(decoded);
+  // console.log(decoded);
 
   //3)check if the user still exists
   const freshUser = await User.findById(decoded.id);
@@ -103,6 +105,40 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = freshUser;
 
   next();
+});
+
+//ONLY FOR RENDERED PAGE, NO ERRORSS
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  // 1) Getting token and check if it exists
+  if (req.cookies.jwt) {
+    // console.log('this is th token', token);
+
+    //2)verification of token
+    console.log('this is the cookie', req.cookies.jwt);
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET
+    ); // promisify is used to convert the callback function to a promise
+
+    // console.log(decoded);
+
+    //3)check if the user still exists
+    const freshUser = await User.findById(decoded.id);
+    if (!freshUser) {
+      return next();
+    }
+
+    //4) check if the user changed password after the token was issued
+
+    if (freshUser.changedPasswordAfter(decoded.iat)) {
+      return next();
+    }
+    // GRANT ACCESS TO PROTECTED ROUTE
+    res.locals.user = freshUser;
+
+    return next();
+  }
+  return next();
 });
 
 exports.restrictTo = (...roles) => {

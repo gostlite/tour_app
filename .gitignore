@@ -4,3 +4,4 @@
 /.prettierrc
 /dev-data
 /node_modules
+/cache/
