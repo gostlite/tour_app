@@ -2,7 +2,12 @@ const AppError = require('../appError');
 const Tour = require('../models/tour_model');
 const Booking = require('../models/booking_model');
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const Stripe = require('stripe');
+
+// Initialize Stripe with the API key from environment variables
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
 const catchAsync = require('../utils/catch_async');
 const factory = require('./handler_factory');
 

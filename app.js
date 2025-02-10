@@ -20,6 +20,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
+
+app.options('*', cors());
+// app.options('/api/v1/tours', cors())
 // SECURE HTTP HEADER
 
 app.use(helmet());
