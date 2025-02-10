@@ -7,3 +7,4 @@
 /.cache
 package-lock.js
 .vercel
+/.env
