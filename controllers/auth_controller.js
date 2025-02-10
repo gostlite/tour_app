@@ -41,14 +41,14 @@ exports.signup = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
   const url = `${req.protocol}://${req.get('host')}/me`;
-  console.log(url);
+  // console.log(url);
   //SEND WELCOME EMAIL
   await new Email(newUser, url).sendWelcomeMessage();
   createAndSignToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  console.log('login');
+  // console.log('login');
   const { email, password } = req.body;
   //check if email and password exists
   if (!email || !password) {

@@ -3,7 +3,7 @@
 import { showAlert } from './alert.cjs';
 export const login = async (email, password) => {
   try {
-    const res = await axios('http://localhost:3000/api/v1/users/login', {
+    const res = await axios('/api/v1/users/login', {
       method: 'POST',
       data: {
         email,

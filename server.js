@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 
 process.on('uncaughtException', (err) => {
   // console.log(err.name, err.message);
-  console.log(err);
-  console.log('UNHANDLED EXCEPTION');
+  // console.log(err);
+  // console.log('UNHANDLED EXCEPTION');
 
   process.exit(1);
 });
@@ -13,7 +13,7 @@ process.on('uncaughtException', (err) => {
 const app = require('./app');
 // const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DBPASS);
 const DB = process.env.DATABASE_LOCAL;
-console.log(DB);
+// console.log(DB);
 
 mongoose
   .connect(DB, {
@@ -44,7 +44,7 @@ mongoose
 
 /////4 start server//////////
 const server = app.listen(process.env.PORT, () => {
-  console.log(process.env.PORT);
+  // console.log(process.env.PORT);
 });
 
 //catching global unhandeled node error

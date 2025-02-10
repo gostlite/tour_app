@@ -11,6 +11,7 @@ const AppError = require('./appError');
 const globalErrorHandler = require('./controllers/error_controllers');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const compression = require('compression');
 //1 middleware
 
 //SERVING STATIC FILE
@@ -59,6 +60,8 @@ app.use(
   })
 );
 
+//COMPRESSION MIDDLEWARE
+app.use(compression());
 //TEST MIDDLEWARE
 app.use((req, res, next) => {
   req.reuestTime = new Date().toISOString();

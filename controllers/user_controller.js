@@ -54,8 +54,6 @@ exports.getMe = (req, res, next) => {
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-  console.log(req.file);
-  console.log(req.body);
   //1) dont allow password updatae here
   if (req.body.password || req.body.confirmPassword) {
     return next(new AppError('This route is not for password update', 400));
@@ -84,8 +82,6 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 });
 
 exports.createNewUser = (req, res) => {
-  console.log(req.params);
-
   res.status(500).json({
     message: 'failed',
     data: 'This route is not defined, please use /signup instead',
