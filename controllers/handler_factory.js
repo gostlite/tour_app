@@ -1,6 +1,7 @@
 const catchAsync = require('./../utils/catch_async');
 const AppError = require('./../appError');
 const ApiFeatures = require('./../utils/api_features');
+const { models } = require('mongoose');
 
 exports.deleteOne = (Model) =>
   catchAsync(async (req, res, next) => {
@@ -87,10 +88,10 @@ exports.getAll = (Model) =>
       .field()
       .paginate();
     //
-    const doc = await features.query.explain();
+    const doc = await features.query;
     res.status(200).json({
-      name: 'Tours',
-
+      // name: models.toString(),
+      status: 'success',
       result: doc.length,
       data: {
         doc,

@@ -49,7 +49,7 @@ const server = app.listen(process.env.PORT, () => {
 
 //catching global unhandeled node error
 process.on('unhandledRejection', (err) => {
-  console.error(err.name, err.message);
+  console.error(err.stack);
   console.log('UNHANDLED REJECTION, SHUTTING DOWN.....');
   server.close(() => {
     process.exit(1);

@@ -1,5 +1,7 @@
 // const fs = require('fs');
 const { path } = require('../app');
+const multer = require('multer');
+const sharp = require('sharp');
 const AppError = require('../appError');
 const Tour = require('./../models/tour_model');
 const ApiFeatures = require('./../utils/api_features');
@@ -24,6 +26,50 @@ const factory = require('./handler_factory');
 //   next();
 // };
 
+//MULTER CONFIG
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) cb(null, true);
+  else cb(new AppError('Please upload an image file', 400), false);
+};
+
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter }); //UPLOAD IMAGES
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  console.log(req.files);
+  if (!req.files.imageCover || !req.files.images) next();
+
+  //IMAGE COVER
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  // 2) IMAGES
+  req.body.images = [];
+  await Promise.all(
+    req.files.images.map(async (image, i) => {
+      const fileName = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+
+      await sharp(image.buffer)
+        .resize(500, 500)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${fileName}`);
+
+      req.body.images.push(fileName);
+    })
+  );
+
+  next();
+});
 exports.aliasTopTour = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-ratingsAverage, price';

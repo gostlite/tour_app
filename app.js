@@ -36,6 +36,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 // BODY PARSER READING DATA FROM BODY INTO REQ.BODY
 app.use(express.json({ limit: '10KB' }));
+app.use(express.urlencoded({ extended: true, limit: '10KB' }));
 app.use(cookieParser());
 
 // DATA SANITISE AGAINST NO SQL QUERY INJECTION
@@ -61,8 +62,8 @@ app.use(
 //TEST MIDDLEWARE
 app.use((req, res, next) => {
   req.reuestTime = new Date().toISOString();
-  console.log(req.headers);
-  console.log(req.cookies);
+  // console.log(req.headers);
+  // console.log(req.cookies);
   next();
 });
 
@@ -71,11 +72,13 @@ const tourRouter = require('./routes/tour_router');
 const userRouter = require('./routes/user_router');
 const reviewRouter = require('./routes/review_router');
 const viewRouter = require('./routes/views_router');
+const bookingRouter = require('./routes/booking_router');
 
 //for the apis
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 app.use('/', viewRouter);
 

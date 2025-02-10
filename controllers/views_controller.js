@@ -1,5 +1,9 @@
 const catchAsync = require('../utils/catch_async');
 const Tour = require('../models/tour_model');
+const AppError = require('../appError');
+const User = require('../models/user_model');
+const Booking = require('../models/booking_model');
+const factory = require('./handler_factory');
 
 exports.getOverview = catchAsync(async (req, res, next) => {
   const tours = await Tour.find();
@@ -10,19 +14,20 @@ exports.getOverview = catchAsync(async (req, res, next) => {
 });
 
 exports.getTour = catchAsync(async (req, res, next) => {
-  const slug = req.params.slug;
-  const tour = await Tour.findOne({ slug }).populate({
+  // Get data for requested tour (+reviews, +guides)
+  const tour = await Tour.findOne({ slug: req.params.slug }).populate({
     path: 'reviews',
     fields: 'review rating user',
   });
-  console.log(tour.images);
+
+  if (!tour) return next(new AppError('This tour does not exist!', 404));
+
+  // Render template using data retrieved
   res.status(200).render('tour', {
-    title: `${tour.name} Tour`,
+    title: tour.name,
     tour,
-    user: 'Your mind go dey',
   });
 });
-
 exports.getLoginForm = (req, res) => {
   res
     .status(200)
@@ -37,3 +42,41 @@ exports.getSignUpForm = (req, res) => {
     title: 'Sign up form',
   });
 };
+
+exports.getAccount = (req, res) => {
+  res.status(200).render('account', {
+    title: 'Account Information',
+  });
+};
+
+exports.updateUserdata = catchAsync(async (req, res, next) => {
+  console.log(req.body);
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+  res.status(200).render('account', {
+    title: 'Account Information',
+    user: updatedUser,
+  });
+});
+
+exports.getMyTours = catchAsync(async (req, res, next) => {
+  //1) find all bookings
+  const bookings = await Booking.find({ user: req.user.id });
+
+  //2)find tours with returned bookings
+  const tourIds = bookings.map((el) => el.tour);
+  const tours = await Tour.find({ _id: { $in: tourIds } });
+  res.status(200).render('overview', {
+    title: 'All Booked Tours',
+    tours,
+  });
+});

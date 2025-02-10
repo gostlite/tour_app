@@ -12,7 +12,7 @@ router.post('/forgotPassword', authController.forgotPassword);
 
 //protect all routes
 router.use(authController.protect);
-
+router.get('/logout', authController.logout);
 router.patch(
   '/updatePassword',
 
@@ -27,7 +27,12 @@ router.get(
   userController.getUser
 );
 
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+);
 router.delete('/deleteMe', userController.deleteMe);
 
 //restrict to

@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user_model');
 const catchAsync = require('../utils/catch_async');
 const AppError = require('../appError');
-const sendEmail = require('../utils/email');
+const Email = require('../utils/email');
 const crypto = require('crypto');
 
 const signToken = (id) => {
@@ -40,7 +40,10 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt || undefined,
     role: req.body.role,
   });
-
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  console.log(url);
+  //SEND WELCOME EMAIL
+  await new Email(newUser, url).sendWelcomeMessage();
   createAndSignToken(newUser, 201, res);
 });
 
@@ -65,6 +68,14 @@ exports.login = catchAsync(async (req, res, next) => {
   //3 if everything is ok send token to client
   createAndSignToken(user, 200, res);
 });
+//LOGGING OUT USER
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'successfully logged out', {
+    expire: new Date(Date.now) * 10 * 1000,
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
 
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it exists
@@ -103,43 +114,50 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = freshUser;
+  res.locals.user = freshUser;
 
   next();
 });
 
 //ONLY FOR RENDERED PAGE, NO ERRORSS
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   // 1) Getting token and check if it exists
+
   if (req.cookies.jwt) {
     // console.log('this is th token', token);
 
     //2)verification of token
     console.log('this is the cookie', req.cookies.jwt);
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET
-    ); // promisify is used to convert the callback function to a promise
+    try {
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      );
+      // promisify is used to convert the callback function to a promise
 
-    // console.log(decoded);
+      // console.log(decoded);
 
-    //3)check if the user still exists
-    const freshUser = await User.findById(decoded.id);
-    if (!freshUser) {
+      //3)check if the user still exists
+      const freshUser = await User.findById(decoded.id);
+      if (!freshUser) {
+        return next();
+      }
+
+      //4) check if the user changed password after the token was issued
+
+      if (freshUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+      // GRANT ACCESS TO PROTECTED ROUTE
+      res.locals.user = freshUser;
+
+      return next();
+    } catch (error) {
       return next();
     }
-
-    //4) check if the user changed password after the token was issued
-
-    if (freshUser.changedPasswordAfter(decoded.iat)) {
-      return next();
-    }
-    // GRANT ACCESS TO PROTECTED ROUTE
-    res.locals.user = freshUser;
-
-    return next();
   }
   return next();
-});
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
@@ -149,7 +167,7 @@ exports.restrictTo = (...roles) => {
         new AppError('You do not have permission to perform this action', 403)
       );
     }
-    next();
+    return next();
   };
 };
 
@@ -165,17 +183,18 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = user.createPasswordResetToken();
   //we must add the save method to save the token to the database after using the createPasswordResetToken method
   await user.save({ validateBeforeSave: false }); // we pass the validateBeforeSave option to false because we dont want to validate the password and confirmPassword fields
-  //3) send the token to the user's email
-  const resetUrl = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/users/resetPassword/${resetToken}`;
-  const message = `Forgot your email? Please click on the link below to reset your password ${resetUrl}, if you didnt initiate this, kindly ignore. Note this link only lasts for 10mins`;
   try {
-    await sendEmail({
-      email: user.email,
-      subject: 'Reset Natour password (valid for 10mins)',
-      message: message,
-    });
+    //3) send the token to the user's email
+    // const message = `Forgot your email? Please click on the link below to reset your password ${resetUrl}, if you didnt initiate this, kindly ignore. Note this link only lasts for 10mins`;
+    const resetUrl = `${req.protocol}://${req.get(
+      'host'
+    )}/api/v1/users/resetPassword/${resetToken}`;
+    await new Email(user, resetUrl).sendPasswordReset();
+    // await sendEmail({
+    //   email: user.email,
+    //   subject: 'Reset Natour password (valid for 10mins)',
+    //   message: message,
+    // });
     res.status(200).json({
       status: 'success',
       message: 'Token was sent to email',

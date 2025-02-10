@@ -21,28 +21,54 @@ const handleJWTError = () =>
 const handleJwtExpiredToken = () => {
   new AppError('Your token is expired, please login again', 401);
 };
-const sendErrorDev = (res, err) => {
-  res.status(err.statusCode).json({
-    staus: err.status,
-    message: err.message,
-    err: err,
-    stack: err.stack,
-  });
-};
-const sendErrorProd = (res, err) => {
-  //operational, trusted error:send message to client
-  if (err.isOperational) {
+const sendErrorDev = (err, req, res) => {
+  //API ROUTES
+  if (req.originalUrl.startsWith('/api')) {
     res.status(err.statusCode).json({
-      staus: err.status,
+      status: err.status,
       message: err.message,
+      err: err,
+      stack: err.stack,
     });
-  } //programming, unknown error
-  else {
+    //RENDERED ROUTES
+  } else {
+    res.status(err.statusCode).render('error', {
+      title: 'Uh oh! Something went wrong!',
+      msg: err.message,
+    });
+  }
+};
+const sendErrorProd = (err, req, res) => {
+  //A) FOR THE APIS
+  if (req.originalUrl.startsWith('/api')) {
+    //operational, trusted error:send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        msg: err.message,
+      });
+    } //programming, unknown error
+
     //1) log the error
     // console.error("Error ('_')", err);
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
-      message: 'something went wrong',
+      msg: 'something went wrong',
+    });
+  } //B) FOR THE RENDERED WEBSITE
+  else {
+    if (err.isOperational) {
+      res.status(err.statusCode).render('error', {
+        title: 'Uh oh! Something went wrong!',
+        msg: err.message,
+      });
+    } //programming, unknown error
+
+    //1) log the error
+    // console.error("Error ('_')", err);
+    return res.status(500).render('error', {
+      title: 'Uh oh! Something went wrong!',
+      msg: 'something went wrong',
     });
   }
 };
@@ -53,16 +79,16 @@ module.exports = (err, req, res, next) => {
   // console.log(err.stack);
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(res, err);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
-    let error = { ...err, name: err.name }; // this will copy all values from err, including the non-enurable ones like name
+    let error = { ...err, name: err.name, message: err.message }; // this will copy all values from err, including the non-enurable ones like name
     console.log(error.name);
     if (error.name === 'CastError') error = handleCastErrorDb(error);
     if (error.code === 11000) error = handleDuplicateFieldsDb(error);
     if (error.name === 'ValidationError')
       error = handleValidationErrorDb(error);
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
-    if (error.name === 'TokenExpiredError') error = handleJWTExpiredToken();
-    sendErrorProd(res, error);
+    if (error.name === 'TokenExpiredError') error = handleJwtExpiredToken();
+    sendErrorProd(error, req, res);
   }
 };
