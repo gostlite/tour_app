@@ -8,3 +8,5 @@
 package-lock.js
 .vercel
 /.env
+
+.vercel

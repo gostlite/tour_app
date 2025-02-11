@@ -207,7 +207,7 @@ exports.getDistances = catchAsync(async (req, res, next) => {
       },
     },
   ]);
-  console.log(lat, lng);
+  // console.log(lat, lng);
   res.status(200).json({
     result: distances.length,
     status: 'success',
