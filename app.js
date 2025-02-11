@@ -12,6 +12,7 @@ const globalErrorHandler = require('./controllers/error_controllers');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const compression = require('compression');
+const bookingController = require('./controllers/booking_controller');
 //1 middleware
 
 //SERVING STATIC FILE
